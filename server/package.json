@@ -1,0 +1,11 @@
+{
+  "name": "server",
+  "version": "0.1.0",
+  "description": "Execute vehicle detection task on query",
+  "main": "index.js",
+  "author": "ndx",
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  }
+}
