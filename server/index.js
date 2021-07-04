@@ -1,5 +1,6 @@
 const { execSync } = require("child_process");
 const path = require('path');
+const pointInPolygon = require('point-in-polygon');
 
 const testOut = `
 Done! Loaded 162 layers from weights-file
@@ -50,6 +51,8 @@ function toCoordRepr(bb) {
 
 const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 
+// Compute the Jaccard index, or Intersection over Union of two AABBs
+// This is a common metric for AABB overlapping
 function IoU(box1, box2) {
     const bb1 = toCoordRepr(box1);
     const bb2 = toCoordRepr(box2);
@@ -95,9 +98,32 @@ function removeDoubleDetections(objects, threshold) {
     return output;
 }
 
+function filterROI(objects, ROI) {
+    let output = [];
+
+    for (obj of objects) {
+        // Compute centroid
+        const cent = [obj.box.leftX + obj.box.width / 2, obj.box.topY + obj.box.height / 2];
+        if (pointInPolygon(cent, ROI))
+            output.push(obj);
+    }
+
+    return output;
+}
+
+const ROI_008 = [[3392, 1996], [3128, 1276], [1232, 1196], [672, 1712]];
+const ROI_010 = [[2876, 2436], [2600, 1720], [220, 1684], [48, 2332]];
 
 const pPath = path.join(__dirname, `../proto/data/010.jpg`);
 let objects = detect(pPath)
+objects = filterROI(objects, ROI_010);
 objects = removeDoubleDetections(objects, 0.9);
 
 console.log(objects);
+
+const count = objects.length;
+
+if (count < 4)
+    console.log("GO");
+else
+    console.log("NO GO");
